@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"zlab/library/kafka/cons"
 	"zlab/util"
 
 	"github.com/golang/protobuf/proto"
@@ -138,7 +139,17 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
 	for message := range claim.Messages() {
-		//log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+		var stype, id string
+		for _, header := range message.Headers {
+			switch util.ToString(header.Key) {
+			case cons.TYPEKEY:
+				stype = util.ToString(header.Value)
+			case cons.IDKEY:
+				id = util.ToString(header.Value)
+			}
+
+		}
+
 		switch message.Topic {
 		case "gate", "game", "cent":
 			if m, ok := consumer.m[util.ToString(message.Key)]; ok {

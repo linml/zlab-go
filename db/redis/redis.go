@@ -6,8 +6,10 @@ import (
 	"github.com/go-redis/redis"
 )
 
+var client *redis.Client
+
 func init() {
-	client := redis.NewClient(&redis.Options{
+	client = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
@@ -23,4 +25,8 @@ func init() {
 	fmt.Println("redis is init")
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
+}
+
+func Redis() *redis.Client {
+	return client
 }
