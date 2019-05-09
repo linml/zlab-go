@@ -8,11 +8,12 @@ import (
 	"time"
 	"zlab/logic/gate"
 
+	_ "zlab/db/redis"
+
 	"github.com/lonng/nano"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
-	_ "zlab/db/redis"
 )
 
 func main() {
