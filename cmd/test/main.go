@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-	"zlab/library/reque"
 
 	"github.com/golang/protobuf/proto"
 
+	_ "zlab/library/kafka/producer"
 	"zlab/pb"
 
 	"github.com/go-redis/redis"
@@ -18,8 +18,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		reque.Register(&pb.HelloRequest{}, sayHello)
-		reque.Init()
+
 	}()
 
 	client := redis.NewClient(&redis.Options{
@@ -27,7 +26,7 @@ func main() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-
+  
 	go func() {
 		var msg = &pb.HelloRequest{
 			Greeting: "hello m1",

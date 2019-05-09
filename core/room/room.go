@@ -28,18 +28,25 @@ func (s RoomSeatSlice) Swap(i, j int) {
 
 func (s *RoomSeatSlice) AddSort(plyid string, seat uint8) {
 	for i, v := range *s {
+		if v.Seat == seat {
+			return
+		}
 		if v.Seat > seat {
-			var tmp = (*s)[i:]
-			*s = append((*s)[:i], RoomSeat{
+			var tmp = (*s)[i-1:]
+			*s = append((*s)[:i-1], RoomSeat{
 				PlayerID: plyid,
 				Seat:     seat,
 			})
 			*s = append((*s), tmp...)
-			break
 		}
 	}
 }
 func (s *RoomSeatSlice) Add(plyid string, seat uint8) {
+	for _, v := range *s {
+		if v.Seat == seat {
+			return
+		}
+	}
 	*s = append(*s, RoomSeat{
 		PlayerID: plyid,
 		Seat:     seat,

@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.38.0 // indirect
+	github.com/Shopify/sarama v1.22.1
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/golang/mock v1.3.0 // indirect
 	github.com/golang/protobuf v1.3.1

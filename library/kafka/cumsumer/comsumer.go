@@ -2,7 +2,6 @@ package comsumer
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -19,46 +18,16 @@ import (
 
 // Sarma configuration options
 var (
-	brokers = ""
-	version = ""
-	group   = ""
-	topics  = ""
-	oldest  = true
+	brokers = "localhost:9020"
 	verbose = false
 )
 
-func init() {
-	flag.StringVar(&brokers, "brokers", "", "Kafka bootstrap brokers to connect to, as a comma separated list")
-	flag.StringVar(&group, "group", "", "Kafka consumer group definition")
-	flag.StringVar(&version, "version", "2.1.1", "Kafka cluster version")
-	flag.StringVar(&topics, "topics", "", "Kafka topics to be consumed, as a comma seperated list")
-	flag.BoolVar(&oldest, "oldest", true, "Kafka consumer consume initial ofset from oldest")
-	flag.BoolVar(&verbose, "verbose", false, "Sarama logging")
-	flag.Parse()
-
-	if len(brokers) == 0 {
-		panic("no Kafka bootstrap brokers defined, please set the -brokers flag")
-	}
-
-	if len(topics) == 0 {
-		panic("no topics given to be consumed, please set the -topics flag")
-	}
-
-	if len(group) == 0 {
-		panic("no Kafka consumer group defined, please set the -group flag")
-	}
-}
-
-func init() {
+//Init 初始化
+func Init(group string, topics ...string) {
 	log.Println("Starting a new Sarama consumer")
 
 	if verbose {
 		sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
-	}
-
-	version, err := sarama.ParseKafkaVersion(version)
-	if err != nil {
-		panic(err)
 	}
 
 	/**
@@ -66,11 +35,6 @@ func init() {
 	 * The Kafka cluster version has to be defined before the consumer/producer is initialized.
 	 */
 	config := sarama.NewConfig()
-	config.Version = version
-
-	if oldest {
-		config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	}
 
 	/**
 	 * Setup a new Sarama consumer group
@@ -86,7 +50,7 @@ func init() {
 	go func() {
 		for {
 			consumer.ready = make(chan bool, 0)
-			err := client.Consume(ctx, strings.Split(topics, ","), &consumer)
+			err := client.Consume(ctx, topics, &consumer)
 			if err != nil {
 				panic(err)
 			}
@@ -139,19 +103,27 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
 	for message := range claim.Messages() {
-		var stype, id string
-		for _, header := range message.Headers {
-			switch util.ToString(header.Key) {
-			case cons.TYPEKEY:
-				stype = util.ToString(header.Value)
-			case cons.IDKEY:
-				id = util.ToString(header.Value)
-			}
-
-		}
 
 		switch message.Topic {
+		case "db":
+			fmt.Println("mongodb udpate")
 		case "gate", "game", "cent":
+			var stype, id string
+			if message.Headers != nil && len(message.Headers) > 0 {
+				for _, header := range message.Headers {
+					switch util.ToString(header.Key) {
+					case cons.TYPEKEY:
+						stype = util.ToString(header.Value)
+					case cons.IDKEY:
+						id = util.ToString(header.Value)
+					}
+
+				}
+			}
+			if stype == "sys" {
+
+			}
+			fmt.Println(stype, id)
 			if m, ok := consumer.m[util.ToString(message.Key)]; ok {
 				err := proto.Unmarshal(message.Value, m.msg)
 				if err != nil {
