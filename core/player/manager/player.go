@@ -11,3 +11,7 @@ type PlayerManager struct {
 func (m *PlayerManager) Player(id string) {
 	m.cache.HGet("key", "field")
 }
+
+func (m *PlayerManager) SetPlayer() {
+
+}
