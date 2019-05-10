@@ -42,16 +42,16 @@ func NewProducer() *Producer {
 	brokerList := strings.Split(*brokers, ",")
 	log.Printf("Kafka brokers: %s", strings.Join(brokerList, ", "))
 	return &Producer{
-		DataCollector:     newDataCollector(brokerList),
-		AccessLogProducer: newAccessLogProducer(brokerList),
+		Sync:  newDataCollector(brokerList),
+		Async: newAccessLogProducer(brokerList),
 	}
 
 }
 
 //Producer 队列生产者
 type Producer struct {
-	DataCollector     sarama.SyncProducer
-	AccessLogProducer sarama.AsyncProducer
+	Sync  sarama.SyncProducer
+	Async sarama.AsyncProducer
 }
 
 //Send 发送消息 protobuf
@@ -76,7 +76,7 @@ func (s *Producer) Send(topic, stype, id string, pb proto.Message) error {
 			},
 		},
 	}
-	p, off, err := s.DataCollector.SendMessage(msg)
+	p, off, err := s.Sync.SendMessage(msg)
 	if err != nil {
 		fmt.Println("send msg error", err)
 		return err
@@ -109,7 +109,7 @@ func (s *Producer) SendAsync(topic, stype, id string, pb proto.Message) {
 		},
 	}
 
-	s.AccessLogProducer.Input() <- msg
+	s.Async.Input() <- msg
 }
 
 //LogAsync 异步log
@@ -119,7 +119,15 @@ func (s *Producer) LogAsync(topic, text string) {
 		Value: sarama.StringEncoder(text),
 		Topic: topic,
 	}
-	s.AccessLogProducer.Input() <- msg
+	s.Async.Input() <- msg
+}
+
+func (s *Producer) DbAsync(cmd []byte) {
+	var msg = &sarama.ProducerMessage{
+		Value: sarama.ByteEncoder(cmd),
+		Topic: "db",
+	}
+	s.Async.Input() <- msg
 }
 
 func newDataCollector(brokerList []string) sarama.SyncProducer {
