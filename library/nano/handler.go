@@ -289,6 +289,8 @@ func (h *handlerService) processMessage(agent *agent, msg *message.Message) {
 		lastMid = 0
 	}
 
+	//转发消息
+
 	handler, ok := h.handlers[msg.Route]
 	if !ok {
 		logger.Println(fmt.Sprintf("nano/handler: %s not found(forgot registered?)", msg.Route))
