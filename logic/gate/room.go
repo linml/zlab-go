@@ -1,6 +1,6 @@
 package gate
 
-import "github.com/lonng/nano"
+import "zlab/library/nano"
 
 type Room struct {
 	RoomID string

@@ -3,9 +3,9 @@ package gate
 import (
 	"time"
 
-	"github.com/lonng/nano"
-	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/session"
+	"zlab/library/nano"
+	"zlab/library/nano/component"
+	"zlab/library/nano/session"
 )
 
 const kickResetBacklog = 8

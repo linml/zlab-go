@@ -1,6 +1,6 @@
 package gate
 
-import "github.com/lonng/nano/component"
+import "zlab/library/nano/component"
 
 type RoomManager struct {
 	component.Base

@@ -1,10 +1,10 @@
 package room
 
 type Room struct {
-	ID        string
-	MaxPlayer int32
-	MinPlayer int32
-	Players   RoomSeatSlice //[座位号]plyid
+	ID        string        //房间id
+	MaxPlayer int32         //最大玩家数
+	MinPlayer int32         //最少开始人数
+	Players   RoomSeatSlice //[座位号,plyid]
 	IsSystem  bool          //是否是系统创建
 	IsStream  bool          //是否是流动场 /.无固定座位
 }

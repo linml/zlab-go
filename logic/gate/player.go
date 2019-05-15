@@ -1,7 +1,7 @@
 package gate
 
 import (
-	"github.com/lonng/nano/session"
+	"zlab/library/nano/session"
 )
 
 type Player struct {

@@ -6,11 +6,9 @@ import (
 	"runtime/pprof"
 	"sync"
 	"time"
-	"zlab/logic/gate"
 
-	_ "zlab/db/redis"
+	"zlab/library/nano"
 
-	"github.com/lonng/nano"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
@@ -68,7 +66,7 @@ func serve(c *cli.Context) error {
 	wg.Add(2)
 
 	// go func() { defer wg.Done(); game.Startup() }() // 开启游戏服
-	go func() { defer wg.Done(); gate.Startup() }() // 开启web服务器
+	go func() { defer wg.Done(); Startup() }() // 开启web服务器
 
 	wg.Wait()
 	return nil
