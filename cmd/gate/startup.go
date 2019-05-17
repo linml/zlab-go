@@ -34,6 +34,7 @@ func Startup() {
 	nano.SetHeartbeatInterval(time.Duration(heartbeat) * time.Second)
 
 	//注册所有消息
+	nano.RegisterAll(SwitchMessage)
 
 	// 加密管道
 	c := crypto.NewCrypto()

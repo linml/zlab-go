@@ -25,7 +25,8 @@ import (
 )
 
 var (
-	comps = make([]regComp, 0)
+	comps      = make([]regComp, 0)
+	switchFunc func(uid string, togame bool, data []byte)
 )
 
 type regComp struct {

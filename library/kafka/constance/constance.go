@@ -1,4 +1,4 @@
-package cons
+package constance
 
 const (
 	TYPEKEY = "t"

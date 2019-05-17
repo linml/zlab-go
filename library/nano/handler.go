@@ -71,10 +71,17 @@ type (
 	handlerService struct {
 		services       map[string]*component.Service // all registered service
 		handlers       map[string]*component.Handler // all handler method
-		chLocalProcess chan unhandledMessage         // packets that process locally
-		chCloseSession chan *session.Session         // closed session
-		chFunction     chan func()                   // function that called in logic gorontine
+		chAllProcess   chan allMessage
+		chLocalProcess chan unhandledMessage // packets that process locally
+		chCloseSession chan *session.Session // closed session
+		chFunction     chan func()           // function that called in logic gorontine
 		options        *options
+	}
+
+	allMessage struct {
+		uid    string
+		togame bool
+		data   []byte
 	}
 
 	unhandledMessage struct {
@@ -89,6 +96,7 @@ func newHandlerService() *handlerService {
 	h := &handlerService{
 		services:       make(map[string]*component.Service),
 		handlers:       make(map[string]*component.Handler),
+		chAllProcess:   make(chan allMessage, packetBacklog),
 		chLocalProcess: make(chan unhandledMessage, packetBacklog),
 		chCloseSession: make(chan *session.Session, packetBacklog),
 		chFunction:     make(chan func(), funcBacklog),
@@ -145,6 +153,7 @@ func (h *handlerService) dispatch() {
 			logger.Println(fmt.Sprintf("Dispatcher exit unexpected: %v", err))
 			println(stack())
 		}
+		close(h.chAllProcess)
 		close(h.chLocalProcess)
 		close(h.chCloseSession)
 		globalTicker.Stop()
@@ -154,6 +163,8 @@ func (h *handlerService) dispatch() {
 	// handle packet that sent to chLocalProcess
 	for {
 		select {
+		case m := <-h.chAllProcess:
+			switchFunc(m.uid, m.togame, m.data)
 		case m := <-h.chLocalProcess: // logic dispatch
 			m.agent.lastMid = m.lastMid
 			pcall(m.handler, m.args)
@@ -270,7 +281,14 @@ func (h *handlerService) processPacket(agent *agent, p *packet.Packet) error {
 		if err != nil {
 			return err
 		}
-		h.processMessage(agent, msg)
+		if msg.Route == "" {
+			return fmt.Errorf("bad request")
+		}
+
+		h.chAllProcess <- allMessage{agent.session.UID(), false, p.Data}
+		// h.processMessage(agent, msg)
+		//转发消息
+		// switchFunc(agent.session.UID(), p.Data)
 
 	case packet.Heartbeat:
 		// expected
@@ -289,7 +307,7 @@ func (h *handlerService) processMessage(agent *agent, msg *message.Message) {
 		lastMid = 0
 	}
 
-	//转发消息
+	//过滤
 
 	handler, ok := h.handlers[msg.Route]
 	if !ok {

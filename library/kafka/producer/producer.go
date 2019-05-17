@@ -5,13 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"strings"
 	"time"
-	"zlab/library/kafka/cons"
-	"zlab/util"
-
-	"github.com/golang/protobuf/proto"
+	"zlab/library/kafka/topic"
 
 	"github.com/Shopify/sarama"
 )
@@ -54,27 +50,12 @@ type Producer struct {
 	Async sarama.AsyncProducer
 }
 
-//Send 发送消息 protobuf
-func (s *Producer) Send(topic, stype, id string, pb proto.Message) error {
-	var buf, err = proto.Marshal(pb)
-	if err != nil {
-		fmt.Println("marshal msg error", err)
-		return err
-	}
+//Send 转发消息 protobuf
+func (s *Producer) SwitchSend(topic, uid string, data []byte) error {
 	var msg = &sarama.ProducerMessage{
-		Value: sarama.ByteEncoder(buf),
-		Key:   sarama.StringEncoder(reflect.TypeOf(pb).String()),
-		Topic: topic,
-		Headers: []sarama.RecordHeader{
-			sarama.RecordHeader{
-				Key:   util.ToBytes("type"),
-				Value: util.ToBytes(stype),
-			},
-			sarama.RecordHeader{
-				Key:   util.ToBytes("id"),
-				Value: util.ToBytes(id),
-			},
-		},
+		Value: sarama.ByteEncoder(data),  //数据
+		Key:   sarama.StringEncoder(uid), //用户id
+		Topic: topic,                     //game gate cent
 	}
 	p, off, err := s.Sync.SendMessage(msg)
 	if err != nil {
@@ -85,47 +66,31 @@ func (s *Producer) Send(topic, stype, id string, pb proto.Message) error {
 	return nil
 }
 
-//SendAsync 异步发送消息 protobuf
-func (s *Producer) SendAsync(topic, stype, id string, pb proto.Message) {
-	var buf, err = proto.Marshal(pb)
-	if err != nil {
-		fmt.Println("marshal msg error", err)
-		return
-	}
-
+//SwitchSendAsync 异步发送消息 protobuf
+func (s *Producer) SwitchSendAsync(topic, uid string, data []byte) {
 	var msg = &sarama.ProducerMessage{
-		Value: sarama.ByteEncoder(buf),
-		Key:   sarama.StringEncoder(reflect.TypeOf(pb).String()),
-		Topic: topic,
-		Headers: []sarama.RecordHeader{
-			sarama.RecordHeader{
-				Key:   util.ToBytes(cons.TYPEKEY),
-				Value: util.ToBytes(stype),
-			},
-			sarama.RecordHeader{
-				Key:   util.ToBytes(cons.IDKEY),
-				Value: util.ToBytes(id),
-			},
-		},
+		Value: sarama.ByteEncoder(data),  //数据
+		Key:   sarama.StringEncoder(uid), //用户id
+		Topic: topic,                     //game gate cent
 	}
 
 	s.Async.Input() <- msg
 }
 
 //LogAsync 异步log
-func (s *Producer) LogAsync(topic, text string) {
-
+func (s *Producer) LogAsync(text string) {
 	var msg = &sarama.ProducerMessage{
 		Value: sarama.StringEncoder(text),
-		Topic: topic,
+		Topic: topic.Log,
 	}
 	s.Async.Input() <- msg
 }
 
+//DbAsync 数据库写
 func (s *Producer) DbAsync(cmd []byte) {
 	var msg = &sarama.ProducerMessage{
 		Value: sarama.ByteEncoder(cmd),
-		Topic: "db",
+		Topic: topic.DB,
 	}
 	s.Async.Input() <- msg
 }

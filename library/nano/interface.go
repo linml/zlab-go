@@ -47,6 +47,11 @@ func Register(c component.Component, options ...component.Option) {
 	comps = append(comps, regComp{c, options})
 }
 
+//RegisterAll register all msg for switch
+func RegisterAll(fun func(uid string, togame bool, data []byte)) {
+	switchFunc = fun
+}
+
 // SetHeartbeatInterval set heartbeat time interval
 func SetHeartbeatInterval(d time.Duration) {
 	env.heartbeat = d
